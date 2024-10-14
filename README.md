@@ -9,6 +9,10 @@ The process goes through the following:
 - Authorize requests
 - Retrieve account information and transactions
 
+## Postman
+
+Collection and environment for Postman integration are available in the collections' folder.
+
 ### Requirements
 
 - Python 3.12
