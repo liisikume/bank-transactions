@@ -14,6 +14,7 @@ TPP_REQUEST_ID = "c8271b81-4229-5a1f-bf9c-758f11c1f5b1"
 TPP_TRANSACTION_ID = "6b24ce42-237f-4303-a917-cf778e5013d6"
 STATE_ID = "bc4b933c-bfc2-44c8-b858-eba90f559f91"
 X_SANDBOX_USER = "SANDBOX-INDIVIDUAL-SE-1"
+CLIENT_ID = "c5b332c413b652ec63fef491ef8acbc6"
 
 
 def get_access_token(client_id: str) -> str:
@@ -186,30 +187,29 @@ def get_transactions(
 
 def main() -> None:
     """Execute main function"""
-    client_id = input("Enter your client ID: ")
 
-    client_access_token = get_access_token(client_id)
+    client_access_token = get_access_token(CLIENT_ID)
 
     consent_id = get_consent(
-        client_id, client_access_token, TPP_TRANSACTION_ID, TPP_REQUEST_ID
+        CLIENT_ID, client_access_token, TPP_TRANSACTION_ID, TPP_REQUEST_ID
     )
 
     state_id = STATE_ID
     code = get_consent_authorization(
-        client_id, consent_id, state_id, X_SANDBOX_USER
+        CLIENT_ID, consent_id, state_id, X_SANDBOX_USER
     )
 
     account_access_token = get_authorization_grant_token(
-        client_id, consent_id, code
+        CLIENT_ID, consent_id, code
     )
 
     accounts = get_accounts(
-        client_id, account_access_token, TPP_REQUEST_ID, TPP_TRANSACTION_ID
+        CLIENT_ID, account_access_token, TPP_REQUEST_ID, TPP_TRANSACTION_ID
     )
     account_id = accounts[0].get("accountId")
 
     account_transactions = get_transactions(
-        client_id,
+        CLIENT_ID,
         account_access_token,
         TPP_REQUEST_ID,
         TPP_TRANSACTION_ID,
