@@ -16,17 +16,17 @@ STATE_ID = "bc4b933c-bfc2-44c8-b858-eba90f559f91"
 X_SANDBOX_USER = "SANDBOX-INDIVIDUAL-SE-1"
 
 
-# Step 1: Request Client Credential Grant (CCG) token
 def get_access_token(client_id: str) -> str:
+    """Step 1: Request Client Credential Grant (CCG) token"""
     headers = {
-      "Accept": "application/json",
-      "Content-Type": "application/x-www-form-urlencoded",
+        "Accept": "application/json",
+        "Content-Type": "application/x-www-form-urlencoded",
     }
 
     data = {
-      "grant_type": "client_credentials",
-      "scope": "AIS",
-      "client_id": client_id,
+        "grant_type": "client_credentials",
+        "scope": "AIS",
+        "client_id": client_id,
     }
 
     response = requests.post(TOKEN_URL, headers=headers, data=data)
@@ -38,13 +38,13 @@ def get_access_token(client_id: str) -> str:
         raise ValueError(f"Requesting access token failed: {response.text}")
 
 
-# Step 2: Request consent using CCG token
 def get_consent(
         client_id: str,
         access_token: str,
         tpp_request_id: str,
         tpp_transaction_id: str
 ) -> str:
+    """Step 2: Request consent using CCG token"""
     headers = {
         "X-IBM-Client-Id": client_id,
         "Authorization": f"Bearer {access_token}",
@@ -68,16 +68,15 @@ def get_consent(
         raise ValueError(f"Posting consent failed: {response.text}")
 
 
-# Step 3.1: Request authorization for consent
 def get_consent_authorization(
         client_id: str,
         consent_id: str,
         state_id: str,
         sandbox_user: str = None
 ) -> str:
-
+    """Step 3.1: Request authorization for consent"""
     headers = {
-      "Accept": "application/json",
+        "Accept": "application/json",
     }
     if sandbox_user:  # X-Sandbox-User is only used in sandbox environment
         headers["X-Sandbox-User"] = sandbox_user
@@ -98,19 +97,21 @@ def get_consent_authorization(
     )
     if response.status_code == 302:
         location = response.headers.get("location")
-        query_params = parse_qs(location)  # Parse redirect url
-        code = query_params.get("code")[0]  # Extract authorization code
+        query_params = parse_qs(location)
+        code = query_params.get("code")[0]
         return code
     else:
-        raise ValueError(f"Requesting consent authorization failed: {response.text}")
+        raise ValueError(
+            f"Requesting consent authorization failed: {response.text}"
+        )
 
 
-# Step 3.2: Request authorization code token for accessing accounts
 def get_authorization_grant_token(
         client_id: str,
         consent_id: str,
         code: str
 ) -> str:
+    """Step 3.2: Request authorization code token for accessing accounts"""
     headers = {
         "Accept": "application/json",
         "Content-Type": "application/x-www-form-urlencoded",
@@ -130,16 +131,18 @@ def get_authorization_grant_token(
         access_token = response.json().get("access_token")
         return access_token
     else:
-        raise ValueError(f"Requesting authorization grant token failed: {response.text}")
+        raise ValueError(
+            f"Requesting authorization grant token failed: {response.text}"
+        )
 
 
-# Step 4.1: Request all accounts to get account_id
 def get_accounts(
         client_id: str,
         access_token: str,
         tpp_request_id: str,
         tpp_transaction_id: str
 ) -> list:
+    """Step 4.1: Request all accounts to get account_id"""
     headers = {
         "X-IBM-Client-Id": client_id,
         "Authorization": f"Bearer {access_token}",
@@ -155,7 +158,6 @@ def get_accounts(
         raise ValueError(f"Requesting accounts failed: {response.text}")
 
 
-# Step 4.2: Request all transactions of a single account
 def get_transactions(
         client_id: str,
         access_token: str,
@@ -163,6 +165,7 @@ def get_transactions(
         tpp_transaction_id: str,
         account_id: str
 ) -> list:
+    """Step 4.2: Request all transactions of a single account"""
     url = transactions_url.format(account_id=account_id)
     headers = {
         "X-IBM-Client-Id": client_id,
@@ -181,40 +184,44 @@ def get_transactions(
         raise ValueError(f"Requesting transactions failed: {response.text}")
 
 
-def main():
+def main() -> None:
+    """Execute main function"""
     client_id = input("Enter your client ID: ")
 
-    # Step 1: Request client access token
     client_access_token = get_access_token(client_id)
 
-    # Step 2: Initiate consent
     consent_id = get_consent(
         client_id, client_access_token, TPP_TRANSACTION_ID, TPP_REQUEST_ID
     )
 
-    # Step 3.1: Request authorization for the consent
     state_id = STATE_ID
-    code = get_consent_authorization(client_id, consent_id, state_id, X_SANDBOX_USER)
+    code = get_consent_authorization(
+        client_id, consent_id, state_id, X_SANDBOX_USER
+    )
 
-    # Step 3.2: Request authorization code token for accessing accounts
-    account_access_token = get_authorization_grant_token(client_id, consent_id, code)
+    account_access_token = get_authorization_grant_token(
+        client_id, consent_id, code
+    )
 
-    # Step 4.1: Request single account to get account_id
     accounts = get_accounts(
         client_id, account_access_token, TPP_REQUEST_ID, TPP_TRANSACTION_ID
     )
     account_id = accounts[0].get("accountId")
 
-    # Step 4.2: Request all transactions of a single account
     account_transactions = get_transactions(
-        client_id, account_access_token, TPP_REQUEST_ID, TPP_TRANSACTION_ID, account_id
+        client_id,
+        account_access_token,
+        TPP_REQUEST_ID,
+        TPP_TRANSACTION_ID,
+        account_id,
     )
     print(f"Account: {account_id}")
     for transaction in account_transactions:
         print(
             f"\t{transaction.get("amount").get("content")} "
             f"{transaction.get("amount").get("currency")} was "
-            f"{transaction.get("creditDebit")} on {transaction.get("bookingDate")}"
+            f"{transaction.get("creditDebit")} on "
+            f"{transaction.get("bookingDate")}"
         )
 
 
