@@ -1,7 +1,7 @@
 {
 	"info": {
-		"_postman_id": "4ce4b9f0-001f-419d-9fad-4dc2c7d9c76c",
-		"name": "Handelsbanken API",
+		"_postman_id": "afc1716d-d31b-498f-8689-c337af037674",
+		"name": "Handelsbanken API Copy",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
 		"_exporter_id": "32918210"
 	},
@@ -174,7 +174,28 @@
 					"listen": "test",
 					"script": {
 						"exec": [
-							""
+							"\r",
+							"var redirectUrl = pm.response.headers.get('location');\r",
+							"console.log(redirectUrl)\r",
+							"\r",
+							"var savedRedirectUri = pm.collectionVariables.get(\"redirect_uri\");\r",
+							"\r",
+							"if (redirectUrl && redirectUrl.startsWith(savedRedirectUri)) {\r",
+							"\r",
+							"    var codeMatch = redirectUrl.match(/code=([^&]*)/);\r",
+							"    \r",
+							"    if (codeMatch && codeMatch[1]) {\r",
+							"        var authCode = codeMatch[1];\r",
+							"\r",
+							"        console.log(\"Authorization Code:\", authCode);\r",
+							"\r",
+							"        pm.environment.set(\"code\", authCode);\r",
+							"    } else {\r",
+							"        console.log(\"Authorization code not found in the redirect URL.\");\r",
+							"    }\r",
+							"} else {\r",
+							"    console.log(\"Redirect URL does not match the saved redirect_uri.\");\r",
+							"}"
 						],
 						"type": "text/javascript",
 						"packages": {}
