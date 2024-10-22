@@ -19,9 +19,9 @@ Collection and environment for Postman integration are available in the collecti
 - Valid `client_id` to enter the Handelsbanken Sandbox environment
 - Internet connection
 
-### Setup
+### Setup (for Windows)
 
-- Create virtual environment and activate it (for Windows)
+- Create virtual environment
 
     `python -m venv venv`
 
