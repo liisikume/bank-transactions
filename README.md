@@ -11,7 +11,7 @@ The process goes through the following:
 
 ## Postman
 
-Collection and environment for Postman integration are available in the collections' folder.
+The collection for Postman integration is available in the collections' folder.
 
 ### Requirements
 
