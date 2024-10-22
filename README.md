@@ -5,9 +5,9 @@ environment.
 
 The process goes through the following:
 
-- Obtain a client ID
-- Authorize requests
-- Retrieve account information and transactions
+- Obtaining access tokens
+- Authorizing requests
+- Retrieving account information and transactions
 
 ## Postman
 
