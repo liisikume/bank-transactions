@@ -1,7 +1,7 @@
 {
 	"info": {
-		"_postman_id": "afc1716d-d31b-498f-8689-c337af037674",
-		"name": "Handelsbanken API Copy",
+		"_postman_id": "4ce4b9f0-001f-419d-9fad-4dc2c7d9c76c",
+		"name": "Handelsbanken API",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
 		"_exporter_id": "32918210"
 	},
@@ -14,8 +14,8 @@
 					"script": {
 						"exec": [
 							"let jsonData = pm.response.json();\r",
-							"let accessToken = jsonData.access_token\r",
-							"pm.collectionVariables.set(\"access_token\", \"Bearer \" + accessToken)"
+							"let access_token = jsonData.access_token\r",
+							"pm.collectionVariables.set(\"access_token\", \"Bearer \" + access_token)"
 						],
 						"type": "text/javascript",
 						"packages": {}
@@ -66,15 +66,11 @@
 					]
 				},
 				"url": {
-					"raw": "https://sandbox.handelsbanken.com/openbanking/oauth2/token/1.0",
-					"protocol": "https",
+					"raw": "{{base_url}}/oauth2/token/1.0",
 					"host": [
-						"sandbox",
-						"handelsbanken",
-						"com"
+						"{{base_url}}"
 					],
 					"path": [
-						"openbanking",
 						"oauth2",
 						"token",
 						"1.0"
@@ -90,8 +86,28 @@
 					"listen": "test",
 					"script": {
 						"exec": [
-							"var consentId = pm.response.json().consentId;\r",
-							"pm.collectionVariables.set(\"consentId\", consentId);"
+							"var consent_id = pm.response.json().consentId;\r",
+							"pm.collectionVariables.set(\"consent_id\", \"AIS:\" + consent_id);"
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				},
+				{
+					"listen": "prerequest",
+					"script": {
+						"exec": [
+							"var consent_tpp_request_id = pm.variables.replaceIn('{{$guid}}');\r",
+							"var consent_tpp_transaction_id = pm.variables.replaceIn('{{$guid}}');\r",
+							"var state_id = pm.variables.replaceIn('{{$guid}}');\r",
+							"\r",
+							"pm.collectionVariables.set(\"consent_tpp_request_id\", consent_tpp_request_id);\r",
+							"pm.collectionVariables.set(\"consent_tpp_transaction_id\", consent_tpp_transaction_id);\r",
+							"pm.collectionVariables.set(\"state_id\", state_id);\r",
+							"\r",
+							"console.log(\"Dynamic TPP-Request-ID:\", consent_tpp_request_id);\r",
+							"console.log(\"Dynamic TPP-Transaction-ID:\", consent_tpp_transaction_id);\r",
+							"console.log(\"Dynamic State-ID:\", state_id);"
 						],
 						"type": "text/javascript",
 						"packages": {}
@@ -132,11 +148,11 @@
 					},
 					{
 						"key": "TPP-Request-ID",
-						"value": "{{tpp_request_ID}}"
+						"value": "{{consent_tpp_request_id}}"
 					},
 					{
 						"key": "TPP-Transaction-ID",
-						"value": "{{tpp_transaction_id}}"
+						"value": "{{consent_tpp_transaction_id}}"
 					}
 				],
 				"body": {
@@ -149,15 +165,11 @@
 					}
 				},
 				"url": {
-					"raw": "https://sandbox.handelsbanken.com/openbanking/psd2/v1/consents",
-					"protocol": "https",
+					"raw": "{{base_url}}/psd2/v1/consents",
 					"host": [
-						"sandbox",
-						"handelsbanken",
-						"com"
+						"{{base_url}}"
 					],
 					"path": [
-						"openbanking",
 						"psd2",
 						"v1",
 						"consents"
@@ -174,14 +186,12 @@
 					"listen": "test",
 					"script": {
 						"exec": [
-							"\r",
 							"var redirectUrl = pm.response.headers.get('location');\r",
-							"console.log(redirectUrl)\r",
 							"\r",
 							"var savedRedirectUri = pm.collectionVariables.get(\"redirect_uri\");\r",
 							"\r",
 							"if (redirectUrl && redirectUrl.startsWith(savedRedirectUri)) {\r",
-							"\r",
+							"    \r",
 							"    var codeMatch = redirectUrl.match(/code=([^&]*)/);\r",
 							"    \r",
 							"    if (codeMatch && codeMatch[1]) {\r",
@@ -189,13 +199,24 @@
 							"\r",
 							"        console.log(\"Authorization Code:\", authCode);\r",
 							"\r",
-							"        pm.environment.set(\"code\", authCode);\r",
+							"        pm.collectionVariables.set(\"auth_code\", authCode);\r",
 							"    } else {\r",
 							"        console.log(\"Authorization code not found in the redirect URL.\");\r",
 							"    }\r",
 							"} else {\r",
 							"    console.log(\"Redirect URL does not match the saved redirect_uri.\");\r",
-							"}"
+							"}\r",
+							""
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				},
+				{
+					"listen": "prerequest",
+					"script": {
+						"exec": [
+							""
 						],
 						"type": "text/javascript",
 						"packages": {}
@@ -222,15 +243,11 @@
 					}
 				],
 				"url": {
-					"raw": "https://sandbox.handelsbanken.com/openbanking/oauth2/authorize/1.0?response_type={{response_type}}&scope={{scope}}&client_id={{client_id}}&state={{state}}&redirect_uri={{redirect_uri}}",
-					"protocol": "https",
+					"raw": "{{base_url}}/oauth2/authorize/1.0?response_type={{response_type}}&scope={{consent_id}}&client_id={{client_id}}&state={{state_id}}&redirect_uri={{redirect_uri}}",
 					"host": [
-						"sandbox",
-						"handelsbanken",
-						"com"
+						"{{base_url}}"
 					],
 					"path": [
-						"openbanking",
 						"oauth2",
 						"authorize",
 						"1.0"
@@ -242,7 +259,7 @@
 						},
 						{
 							"key": "scope",
-							"value": "{{scope}}"
+							"value": "{{consent_id}}"
 						},
 						{
 							"key": "client_id",
@@ -250,7 +267,7 @@
 						},
 						{
 							"key": "state",
-							"value": "{{state}}"
+							"value": "{{state_id}}"
 						},
 						{
 							"key": "redirect_uri",
@@ -268,8 +285,8 @@
 					"listen": "test",
 					"script": {
 						"exec": [
-							"var accessToken = pm.response.json().access_token;\r",
-							"pm.collectionVariables.set(\"accessToken\", \"Bearer\" + accessToken);"
+							"var account_access_token = pm.response.json().access_token;\r",
+							"pm.collectionVariables.set(\"account_access_token\", \"Bearer \" + account_access_token);"
 						],
 						"type": "text/javascript",
 						"packages": {}
@@ -300,7 +317,7 @@
 						},
 						{
 							"key": "scope",
-							"value": "{{scope}}",
+							"value": "{{consent_id}}",
 							"type": "text"
 						},
 						{
@@ -310,7 +327,7 @@
 						},
 						{
 							"key": "code",
-							"value": "{{code}}",
+							"value": "{{auth_code}}",
 							"type": "text"
 						},
 						{
@@ -321,15 +338,11 @@
 					]
 				},
 				"url": {
-					"raw": "https://sandbox.handelsbanken.com/openbanking/oauth2/token/1.0",
-					"protocol": "https",
+					"raw": "{{base_url}}/oauth2/token/1.0",
 					"host": [
-						"sandbox",
-						"handelsbanken",
-						"com"
+						"{{base_url}}"
 					],
 					"path": [
-						"openbanking",
 						"oauth2",
 						"token",
 						"1.0"
@@ -339,15 +352,33 @@
 			"response": []
 		},
 		{
-			"name": "account-information",
+			"name": "accounts-information",
 			"event": [
 				{
 					"listen": "test",
 					"script": {
 						"exec": [
 							"var responseBody = pm.response.json();\r",
-							"var accountId = responseBody.AccountId;\r",
-							"pm.collectionVariables.set(\"accountId\", accountId);"
+							"var account_id = responseBody.accounts[0].accountId;\r",
+							"pm.collectionVariables.set(\"account_id\", account_id);"
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				},
+				{
+					"listen": "prerequest",
+					"script": {
+						"exec": [
+							"var accounts_tpp_request_id = pm.variables.replaceIn('{{$guid}}');\r",
+							"var accounts_tpp_transaction_id = pm.variables.replaceIn('{{$guid}}');\r",
+							"\r",
+							"pm.collectionVariables.set(\"accounts_tpp_request_id\", accounts_tpp_request_id);\r",
+							"pm.collectionVariables.set(\"accounts_tpp_transaction_id\", accounts_tpp_transaction_id);\r",
+							"\r",
+							"console.log(\"Dynamic TPP-Request-ID:\", accounts_tpp_request_id);\r",
+							"console.log(\"Dynamic TPP-Transaction-ID:\", accounts_tpp_transaction_id);\r",
+							""
 						],
 						"type": "text/javascript",
 						"packages": {}
@@ -369,25 +400,21 @@
 					},
 					{
 						"key": "TPP-Request-ID",
-						"value": "{{tpp_request_ID}}",
+						"value": "{{accounts_tpp_request_id}}",
 						"type": "text"
 					},
 					{
 						"key": "TPP-Transaction-ID",
-						"value": "{{tpp_transaction_id}}",
+						"value": "{{accounts_tpp_transaction_id}}",
 						"type": "text"
 					}
 				],
 				"url": {
-					"raw": "https://sandbox.handelsbanken.com/openbanking/psd2/v2/accounts",
-					"protocol": "https",
+					"raw": "{{base_url}}/psd2/v2/accounts",
 					"host": [
-						"sandbox",
-						"handelsbanken",
-						"com"
+						"{{base_url}}"
 					],
 					"path": [
-						"openbanking",
 						"psd2",
 						"v2",
 						"accounts"
@@ -398,6 +425,26 @@
 		},
 		{
 			"name": "single-account-information",
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"exec": [
+							"var account_information_tpp_request_id = pm.variables.replaceIn('{{$guid}}');\r",
+							"var account_information_tpp_transaction_id = pm.variables.replaceIn('{{$guid}}');\r",
+							"\r",
+							"pm.collectionVariables.set(\"account_information_tpp_request_id\", account_information_tpp_request_id);\r",
+							"pm.collectionVariables.set(\"account_information_tpp_transaction_id\", account_information_tpp_transaction_id);\r",
+							"\r",
+							"console.log(\"Dynamic TPP-Request-ID:\", account_information_tpp_request_id);\r",
+							"console.log(\"Dynamic TPP-Transaction-ID:\", account_information_tpp_transaction_id);\r",
+							""
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
 			"request": {
 				"method": "GET",
 				"header": [
@@ -413,29 +460,25 @@
 					},
 					{
 						"key": "TPP-Request-ID",
-						"value": "{{tpp_request_ID}}",
+						"value": "{{account_information_tpp_request_id}}",
 						"type": "text"
 					},
 					{
 						"key": "TPP-Transaction-ID",
-						"value": "{{tpp_transaction_id}}",
+						"value": "{{account_information_tpp_transaction_id}}",
 						"type": "text"
 					}
 				],
 				"url": {
-					"raw": "https://sandbox.handelsbanken.com/openbanking/psd2/v2/accounts/575f0642-662a-10c6-9327-e8e39ab67ac0?withBalance=true",
-					"protocol": "https",
+					"raw": "{{base_url}}/psd2/v2/accounts/{{account_id}}?withBalance=true",
 					"host": [
-						"sandbox",
-						"handelsbanken",
-						"com"
+						"{{base_url}}"
 					],
 					"path": [
-						"openbanking",
 						"psd2",
 						"v2",
 						"accounts",
-						"575f0642-662a-10c6-9327-e8e39ab67ac0"
+						"{{account_id}}"
 					],
 					"query": [
 						{
@@ -460,6 +503,24 @@
 						"type": "text/javascript",
 						"packages": {}
 					}
+				},
+				{
+					"listen": "prerequest",
+					"script": {
+						"exec": [
+							"var transactions_tpp_request_id = pm.variables.replaceIn('{{$guid}}');\r",
+							"var transactions_tpp_transaction_id = pm.variables.replaceIn('{{$guid}}');\r",
+							"\r",
+							"pm.collectionVariables.set(\"transactions_tpp_request_id\", transactions_tpp_request_id);\r",
+							"pm.collectionVariables.set(\"transactions_tpp_transaction_id\", transactions_tpp_transaction_id);\r",
+							"\r",
+							"console.log(\"Dynamic TPP-Request-ID:\", transactions_tpp_request_id);\r",
+							"console.log(\"Dynamic TPP-Transaction-ID:\", transactions_tpp_transaction_id);\r",
+							""
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
 				}
 			],
 			"request": {
@@ -477,12 +538,12 @@
 					},
 					{
 						"key": "TPP-Request-ID",
-						"value": "{{tpp_request_ID}}",
+						"value": "{{transactions_tpp_request_id}}",
 						"type": "text"
 					},
 					{
 						"key": "TPP-Transaction-ID",
-						"value": "{{tpp_transaction_id}}",
+						"value": "{{transactions_tpp_transaction_id}}",
 						"type": "text"
 					},
 					{
@@ -497,24 +558,42 @@
 					}
 				],
 				"url": {
-					"raw": "https://sandbox.handelsbanken.com/openbanking/psd2/v2/accounts/575f0642-662a-10c6-9327-e8e39ab67ac0/transactions",
-					"protocol": "https",
+					"raw": "{{base_url}}/psd2/v2/accounts/{{account_id}}/transactions",
 					"host": [
-						"sandbox",
-						"handelsbanken",
-						"com"
+						"{{base_url}}"
 					],
 					"path": [
-						"openbanking",
 						"psd2",
 						"v2",
 						"accounts",
-						"575f0642-662a-10c6-9327-e8e39ab67ac0",
+						"{{account_id}}",
 						"transactions"
 					]
 				}
 			},
 			"response": []
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"packages": {},
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"packages": {},
+				"exec": [
+					""
+				]
+			}
 		}
 	],
 	"variable": [
@@ -523,28 +602,12 @@
 			"value": "c5b332c413b652ec63fef491ef8acbc6"
 		},
 		{
-			"key": "client_id",
-			"value": ""
-		},
-		{
 			"key": "access_token",
 			"value": ""
 		},
 		{
-			"key": "consentId",
+			"key": "consent_id",
 			"value": ""
-		},
-		{
-			"key": "tpp_request_ID",
-			"value": "c8271b81-4229-5a1f-bf9c-758f11c1f5b1"
-		},
-		{
-			"key": "tpp_transaction_id",
-			"value": "6b24ce42-237f-4303-a917-cf778e5013d6"
-		},
-		{
-			"key": "state",
-			"value": "bc4b933c-bfc2-44c8-b858-eba90f559f91"
 		},
 		{
 			"key": "accept",
@@ -567,19 +630,11 @@
 			"value": "https://example.com"
 		},
 		{
-			"key": "accessToken",
-			"value": ""
-		},
-		{
 			"key": "grant_type",
 			"value": "authorization_code"
 		},
 		{
-			"key": "code",
-			"value": "51d17f17-f616-1a55-b5a1-cb3875d5cfb5"
-		},
-		{
-			"key": "accountId",
+			"key": "account_id",
 			"value": ""
 		},
 		{
@@ -593,6 +648,58 @@
 		{
 			"key": "account_access_token",
 			"value": "Bearer QVQ6YThhMmVlMTUtYzMwMC05NmUyLTgzNWYtZjFlYWRmNjQ1MzMy"
+		},
+		{
+			"key": "consent_tpp_request_id",
+			"value": ""
+		},
+		{
+			"key": "consent_tpp_transaction_id",
+			"value": ""
+		},
+		{
+			"key": "state_id",
+			"value": ""
+		},
+		{
+			"key": "auth_code",
+			"value": ""
+		},
+		{
+			"key": "accounts_tpp_request_id",
+			"value": ""
+		},
+		{
+			"key": "accounts_tpp_transaction_id",
+			"value": ""
+		},
+		{
+			"key": "account_information_tpp_request_id",
+			"value": ""
+		},
+		{
+			"key": "account_information_tpp_transaction_id",
+			"value": ""
+		},
+		{
+			"key": "transactions_tpp_request_id",
+			"value": ""
+		},
+		{
+			"key": "transactions_tpp_transaction_id",
+			"value": ""
+		},
+		{
+			"key": "base_url",
+			"value": "https://sandbox.handelsbanken.com/openbanking"
+		},
+		{
+			"key": "account_transactions_tpp_request_id",
+			"value": ""
+		},
+		{
+			"key": "account_transactions_tpp_transaction_id",
+			"value": ""
 		}
 	]
 }

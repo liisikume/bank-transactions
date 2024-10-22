@@ -1,6 +1,9 @@
+import json
+import uuid
 from urllib.parse import parse_qs
 
 import requests
+
 
 BASE_URL = "https://sandbox.handelsbanken.com/openbanking"
 TOKEN_URL = f"{BASE_URL}/oauth2/token/1.0"
@@ -10,9 +13,7 @@ ACCOUNTS_URL = f"{BASE_URL}/psd2/v2/accounts"
 transactions_url = BASE_URL + "/psd2/v2/accounts/{account_id}/transactions"
 
 REDIRECT_URI = "https://example.com"
-TPP_REQUEST_ID = "c8271b81-4229-5a1f-bf9c-758f11c1f5b1"
-TPP_TRANSACTION_ID = "6b24ce42-237f-4303-a917-cf778e5013d6"
-STATE_ID = "bc4b933c-bfc2-44c8-b858-eba90f559f91"
+
 X_SANDBOX_USER = "SANDBOX-INDIVIDUAL-SE-1"
 CLIENT_ID = "c5b332c413b652ec63fef491ef8acbc6"
 
@@ -180,7 +181,7 @@ def get_transactions(
     response = requests.get(url, headers=headers)
 
     if response.status_code == 200:
-        return response.json().get("transactions")
+        return response.json()
     else:
         raise ValueError(f"Requesting transactions failed: {response.text}")
 
@@ -190,11 +191,13 @@ def main() -> None:
 
     client_access_token = get_access_token(CLIENT_ID)
 
+    consent_tpp_request_id = str(uuid.uuid4())
+    consent_tpp_transaction_id = str(uuid.uuid4())
     consent_id = get_consent(
-        CLIENT_ID, client_access_token, TPP_TRANSACTION_ID, TPP_REQUEST_ID
+        CLIENT_ID, client_access_token, consent_tpp_request_id, consent_tpp_transaction_id
     )
 
-    state_id = STATE_ID
+    state_id = str(uuid.uuid4())
     code = get_consent_authorization(
         CLIENT_ID, consent_id, state_id, X_SANDBOX_USER
     )
@@ -203,26 +206,25 @@ def main() -> None:
         CLIENT_ID, consent_id, code
     )
 
+    accounts_tpp_request_id = str(uuid.uuid4())
+    accounts_tpp_transaction_id = str(uuid.uuid4())
     accounts = get_accounts(
-        CLIENT_ID, account_access_token, TPP_REQUEST_ID, TPP_TRANSACTION_ID
+        CLIENT_ID, account_access_token, accounts_tpp_request_id,
+        accounts_tpp_transaction_id
     )
     account_id = accounts[0].get("accountId")
 
+    transactions_tpp_request_id = str(uuid.uuid4())
+    transactions_tpp_transaction_id = str(uuid.uuid4())
     account_transactions = get_transactions(
         CLIENT_ID,
         account_access_token,
-        TPP_REQUEST_ID,
-        TPP_TRANSACTION_ID,
+        transactions_tpp_request_id,
+        transactions_tpp_transaction_id,
         account_id,
     )
     print(f"Account: {account_id}")
-    for transaction in account_transactions:
-        print(
-            f"\t{transaction.get("amount").get("content")} "
-            f"{transaction.get("amount").get("currency")} was "
-            f"{transaction.get("creditDebit")} on "
-            f"{transaction.get("bookingDate")}"
-        )
+    print(json.dumps(account_transactions, indent=4))
 
 
 if __name__ == "__main__":
