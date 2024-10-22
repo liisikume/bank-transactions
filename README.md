@@ -24,6 +24,9 @@ Collection and environment for Postman integration are available in the collecti
 - Create virtual environment and activate it (for Windows)
 
     `python -m venv venv`
+
+- Activate virtual environment 
+
     `.\venv\Scripts\activate`
 
 - Install requirements.txt
