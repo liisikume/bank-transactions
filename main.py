@@ -4,7 +4,6 @@ from urllib.parse import parse_qs
 
 import requests
 
-
 BASE_URL = "https://sandbox.handelsbanken.com/openbanking"
 TOKEN_URL = f"{BASE_URL}/oauth2/token/1.0"
 CONSENT_URL = f"{BASE_URL}/psd2/v1/consents"
@@ -36,15 +35,14 @@ def get_access_token(client_id: str) -> str:
     if response.status_code == 200:
         access_token = response.json().get("access_token")
         return access_token
-    else:
-        raise ValueError(f"Requesting access token failed: {response.text}")
+    raise ValueError(f"Requesting access token failed: {response.text}")
 
 
 def get_consent(
         client_id: str,
         access_token: str,
         tpp_request_id: str,
-        tpp_transaction_id: str
+        tpp_transaction_id: str,
 ) -> str:
     """Step 2: Request consent using CCG token"""
     headers = {
@@ -66,15 +64,14 @@ def get_consent(
     if response.status_code == 201:
         consent_id = response.json().get("consentId")
         return consent_id
-    else:
-        raise ValueError(f"Posting consent failed: {response.text}")
+    raise ValueError(f"Posting consent failed: {response.text}")
 
 
 def get_consent_authorization(
         client_id: str,
         consent_id: str,
         state_id: str,
-        sandbox_user: str = None
+        sandbox_user: str = None,
 ) -> str:
     """Step 3.1: Request authorization for consent"""
     headers = {
@@ -102,16 +99,15 @@ def get_consent_authorization(
         query_params = parse_qs(location)
         code = query_params.get("code")[0]
         return code
-    else:
-        raise ValueError(
-            f"Requesting consent authorization failed: {response.text}"
-        )
+    raise ValueError(
+        f"Requesting consent authorization failed: {response.text}"
+    )
 
 
 def get_authorization_grant_token(
         client_id: str,
         consent_id: str,
-        code: str
+        code: str,
 ) -> str:
     """Step 3.2: Request authorization code token for accessing accounts"""
     headers = {
@@ -132,17 +128,16 @@ def get_authorization_grant_token(
     if response.status_code == 200:
         access_token = response.json().get("access_token")
         return access_token
-    else:
-        raise ValueError(
-            f"Requesting authorization grant token failed: {response.text}"
-        )
+    raise ValueError(
+        f"Requesting authorization grant token failed: {response.text}"
+    )
 
 
 def get_accounts(
         client_id: str,
         access_token: str,
         tpp_request_id: str,
-        tpp_transaction_id: str
+        tpp_transaction_id: str,
 ) -> list:
     """Step 4.1: Request all accounts to get account_id"""
     headers = {
@@ -156,8 +151,7 @@ def get_accounts(
 
     if response.status_code == 200:
         return response.json().get("accounts")
-    else:
-        raise ValueError(f"Requesting accounts failed: {response.text}")
+    raise ValueError(f"Requesting accounts failed: {response.text}")
 
 
 def get_transactions(
@@ -165,7 +159,7 @@ def get_transactions(
         access_token: str,
         tpp_request_id: str,
         tpp_transaction_id: str,
-        account_id: str
+        account_id: str,
 ) -> list:
     """Step 4.2: Request all transactions of a single account"""
     url = transactions_url.format(account_id=account_id)
@@ -182,8 +176,7 @@ def get_transactions(
 
     if response.status_code == 200:
         return response.json()
-    else:
-        raise ValueError(f"Requesting transactions failed: {response.text}")
+    raise ValueError(f"Requesting transactions failed: {response.text}")
 
 
 def main() -> None:
@@ -194,7 +187,10 @@ def main() -> None:
     consent_tpp_request_id = str(uuid.uuid4())
     consent_tpp_transaction_id = str(uuid.uuid4())
     consent_id = get_consent(
-        CLIENT_ID, client_access_token, consent_tpp_request_id, consent_tpp_transaction_id
+        CLIENT_ID,
+        client_access_token,
+        consent_tpp_request_id,
+        consent_tpp_transaction_id,
     )
 
     state_id = str(uuid.uuid4())
@@ -209,8 +205,10 @@ def main() -> None:
     accounts_tpp_request_id = str(uuid.uuid4())
     accounts_tpp_transaction_id = str(uuid.uuid4())
     accounts = get_accounts(
-        CLIENT_ID, account_access_token, accounts_tpp_request_id,
-        accounts_tpp_transaction_id
+        CLIENT_ID,
+        account_access_token,
+        accounts_tpp_request_id,
+        accounts_tpp_transaction_id,
     )
     account_id = accounts[0].get("accountId")
 
