@@ -17,6 +17,14 @@ X_SANDBOX_USER = "SANDBOX-INDIVIDUAL-SE-1"
 CLIENT_ID = "c5b332c413b652ec63fef491ef8acbc6"
 
 
+def format_access_token(response) -> str:
+    """Add token type to the token to avoid code repetition."""
+    response_data = response.json()
+    token_type = response_data.get("token_type")
+    access_token = response_data.get("access_token")
+    return f"{token_type} {access_token}"
+
+
 def get_access_token(client_id: str) -> str:
     """Step 1: Request Client Credential Grant (CCG) token"""
     headers = {
@@ -33,8 +41,7 @@ def get_access_token(client_id: str) -> str:
     response = requests.post(TOKEN_URL, headers=headers, data=data)
 
     if response.status_code == 200:
-        access_token = response.json().get("access_token")
-        return access_token
+        return format_access_token(response)
     raise ValueError(f"Requesting access token failed: {response.text}")
 
 
@@ -47,7 +54,7 @@ def get_consent(
     """Step 2: Request consent using CCG token"""
     headers = {
         "X-IBM-Client-Id": client_id,
-        "Authorization": f"Bearer {access_token}",
+        "Authorization": access_token,
         "Accept": "application/json",
         "Content-Type": "application/json",
         "Country": "SE",
@@ -126,8 +133,7 @@ def get_authorization_grant_token(
     response = requests.post(TOKEN_URL, headers=headers, data=data)
 
     if response.status_code == 200:
-        access_token = response.json().get("access_token")
-        return access_token
+        return format_access_token(response)
     raise ValueError(
         f"Requesting authorization grant token failed: {response.text}"
     )
@@ -142,7 +148,7 @@ def get_accounts(
     """Step 4.1: Request all accounts to get account_id"""
     headers = {
         "X-IBM-Client-Id": client_id,
-        "Authorization": f"Bearer {access_token}",
+        "Authorization": access_token,
         "TPP-Request-ID": tpp_request_id,
         "TPP-Transaction-ID": tpp_transaction_id,
     }
@@ -165,7 +171,7 @@ def get_transactions(
     url = transactions_url.format(account_id=account_id)
     headers = {
         "X-IBM-Client-Id": client_id,
-        "Authorization": f"Bearer {access_token}",
+        "Authorization": access_token,
         "TPP-Request-ID": tpp_request_id,
         "TPP-Transaction-ID": tpp_transaction_id,
         "Accept": "application/json",
